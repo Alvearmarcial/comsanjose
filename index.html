@@ -266,7 +266,7 @@
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  CONFIGURACIÓN — reemplazá con tu URL de Google Apps Script  ║
 // ╚══════════════════════════════════════════════════════════════╝
-const API_URL = 'https://script.google.com/macros/s/AKfycbwByWlm2bJfzKegXc98-I2eqfYL2G3YuFnUuYB3SaXWQ0xJCbr5IqlrY3rzPuZtAmA4/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwPsJRdIwARTmOdAEzwYFH4HszzRgXiRx5UnpO-gFxGPR6HWZvPF1l8l5C7fmBSS18/exec';
 
 // ──────────────────────────────────────
 // ESTADO
@@ -318,22 +318,18 @@ function setAdminSession(on) {
 // ──────────────────────────────────────
 // API  —  fetch con action
 // ──────────────────────────────────────
+// GAS no soporta CORS preflight → todo va por GET con parámetros
 async function api(params) {
   const url = new URL(API_URL);
-  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
-  const r = await fetch(url.toString());
-  if(!r.ok) throw new Error('Error de red');
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
+  const r = await fetch(url.toString(), { redirect: 'follow' });
+  if(!r.ok) throw new Error('Error de red ' + r.status);
   return r.json();
 }
 
+// Alias para compatibilidad — usa GET igual
 async function apiPost(body) {
-  const r = await fetch(API_URL, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(body)
-  });
-  if(!r.ok) throw new Error('Error de red');
-  return r.json();
+  return api(body);
 }
 
 // ──────────────────────────────────────
