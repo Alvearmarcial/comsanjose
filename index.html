@@ -7,9 +7,9 @@
   <meta name="description" content="Gestión económica comunitaria" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Comunidad San José" />
+  <meta name="apple-mobile-web-app-title" content="ComunidadApp" />
   <link rel="manifest" href="manifest.json" />
-  <title>Comunidad San José</title>
+  <title>ComunidadApp</title>
   <style>
     :root {
       --primary: #1a56db;
@@ -47,7 +47,7 @@
             box-shadow: var(--shadow); padding: 14px 10px; text-align: center; }
     .card-label { font-size: .7rem; color: var(--muted); text-transform: uppercase;
                   letter-spacing: .5px; margin-bottom: 6px; }
-    .card-value { font-size: 1.1rem; font-weight: 700; }
+    .card-value { font-size: clamp(.75rem, 3.5vw, 1.1rem); font-weight: 700; word-break: break-all; }
     .card-value.saldo  { color: var(--primary); }
     .card-value.ingreso{ color: var(--success); }
     .card-value.egreso { color: var(--danger); }
@@ -155,7 +155,7 @@
 <!-- HEADER -->
 <header>
   <div class="header-row">
-    <h1>💰 Comunidad San José</h1>
+    <h1>💰 ComunidadApp</h1>
     <button id="btn-admin-toggle">🔐 Admin</button>
   </div>
 </header>
@@ -280,7 +280,291 @@ let mesFiltro  = '';
 // UTILIDADES
 // ──────────────────────────────────────
 const $ = id => document.getElementById(id);
-const fmt = n => '$' + Number(n).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmt = n => '
+const fmtFecha = d => { const [y,m,dia] = d.split('-'); return `${dia}/${m}/${y}`; };
+
+function showToast(msg, ms=2500) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function openModal(id)  { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+
+document.querySelectorAll('[data-close]').forEach(btn =>
+  btn.addEventListener('click', () => closeModal(btn.dataset.close))
+);
+document.querySelectorAll('.modal-backdrop').forEach(bd =>
+  bd.addEventListener('click', e => { if(e.target === bd) closeModal(bd.id); })
+);
+
+function todayISO() {
+  const d = new Date(); const z = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+}
+
+// ──────────────────────────────────────
+// SESIÓN ADMIN (localStorage)
+// ──────────────────────────────────────
+function setAdminSession(on) {
+  isAdmin = on;
+  if(on) localStorage.setItem('admin_session','1');
+  else   localStorage.removeItem('admin_session');
+  $('btn-admin-toggle').textContent = on ? '🔓 Salir' : '🔐 Admin';
+  $('fab').style.display = on ? 'flex' : 'none';
+  renderList();
+}
+
+// ──────────────────────────────────────
+// API  —  fetch con action
+// ──────────────────────────────────────
+// GAS no soporta CORS preflight → todo va por GET con parámetros
+async function api(params) {
+  const url = new URL(API_URL);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
+  const r = await fetch(url.toString(), { redirect: 'follow' });
+  if(!r.ok) throw new Error('Error de red ' + r.status);
+  return r.json();
+}
+
+// Alias para compatibilidad — usa GET igual
+async function apiPost(body) {
+  return api(body);
+}
+
+// ──────────────────────────────────────
+// CARGAR MOVIMIENTOS
+// ──────────────────────────────────────
+async function cargarMovimientos() {
+  $('list-container').innerHTML = '<div class="spinner"><div></div><div></div><div></div></div>';
+  try {
+    const data = await api({ action: 'getMovimientos' });
+    movimientos = data.movimientos || [];
+    poblarMeses();
+    calcularYRenderizar();
+  } catch(e) {
+    $('list-container').innerHTML = '<div class="empty-state">⚠️ No se pudo conectar con el servidor.</div>';
+  }
+}
+
+// ──────────────────────────────────────
+// SELECTOR DE MES
+// ──────────────────────────────────────
+function poblarMeses() {
+  const sel = $('sel-mes');
+  const meses = [...new Set(movimientos.map(m => m.fecha.substring(0,7)))].sort().reverse();
+  const hoy = todayISO().substring(0,7);
+  if(!meses.includes(hoy)) meses.unshift(hoy);
+  sel.innerHTML = '';
+  meses.forEach(m => {
+    const [y, mo] = m.split('-');
+    const nom = new Date(y, mo-1, 1).toLocaleString('es-AR', {month:'long', year:'numeric'});
+    sel.insertAdjacentHTML('beforeend',
+      `<option value="${m}" ${m===mesFiltro?'selected':''}>${nom.charAt(0).toUpperCase()+nom.slice(1)}</option>`);
+  });
+  if(!mesFiltro) mesFiltro = sel.value;
+}
+
+$('sel-mes').addEventListener('change', e => { mesFiltro = e.target.value; calcularYRenderizar(); });
+
+// ──────────────────────────────────────
+// CÁLCULO Y RENDER
+// ──────────────────────────────────────
+function calcularYRenderizar() {
+  // Saldo acumulado hasta fin del mes anterior
+  const mesRef = mesFiltro;
+  const anterior = movimientos.filter(m => m.fecha.substring(0,7) < mesRef);
+  const saldoAnterior = anterior.reduce((acc,m) =>
+    acc + (m.tipo === 'Ingreso' ? +m.monto : -m.monto), 0);
+
+  const delMes = movimientos.filter(m => m.fecha.substring(0,7) === mesRef);
+  const totalIngresos = delMes.filter(m => m.tipo==='Ingreso').reduce((a,m) => a + +m.monto, 0);
+  const totalEgresos  = delMes.filter(m => m.tipo==='Egreso' ).reduce((a,m) => a + +m.monto, 0);
+  const saldo = saldoAnterior + totalIngresos - totalEgresos;
+
+  $('card-saldo').textContent    = fmt(saldo);
+  $('card-ingresos').textContent = fmt(totalIngresos);
+  $('card-egresos').textContent  = fmt(totalEgresos);
+
+  renderList(delMes);
+}
+
+function renderList(lista) {
+  if(!lista) lista = movimientos.filter(m => m.fecha.substring(0,7) === mesFiltro);
+  const sorted = [...lista].sort((a,b) => b.fecha.localeCompare(a.fecha));
+  const c = $('list-container');
+  if(!sorted.length) { c.innerHTML='<div class="empty-state">Sin movimientos este mes.</div>'; return; }
+  c.innerHTML = sorted.map(m => `
+    <div class="mov-item ${m.tipo.toLowerCase()}">
+      <div class="mov-info">
+        <div class="mov-motivo">${escHtml(m.motivo)}</div>
+        <div class="mov-meta">${fmtFecha(m.fecha)} · ${m.tipo}</div>
+        ${isAdmin ? `<div class="mov-actions">
+          <button class="btn-icon" onclick="editarMov('${m.id}')">✏️ Editar</button>
+          <button class="btn-icon del" onclick="eliminarMov('${m.id}')">🗑️ Eliminar</button>
+        </div>` : ''}
+      </div>
+      <div class="mov-right">
+        <div class="mov-monto ${m.tipo.toLowerCase()}">${m.tipo==='Ingreso'?'+':'-'}${fmt(m.monto)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ──────────────────────────────────────
+// LOGIN ADMIN
+// ──────────────────────────────────────
+$('btn-admin-toggle').addEventListener('click', () => {
+  if(isAdmin) { setAdminSession(false); showToast('Sesión cerrada'); return; }
+  $('inp-pass').value = ''; $('err-login').classList.remove('show');
+  openModal('modal-login');
+});
+
+$('btn-login').addEventListener('click', async () => {
+  const pass = $('inp-pass').value.trim();
+  if(!pass) return;
+  $('btn-login').disabled = true; $('btn-login').textContent = 'Verificando...';
+  try {
+    const r = await api({ action: 'login', password: pass });
+    if(r.ok) {
+      closeModal('modal-login');
+      setAdminSession(true);
+      if(r.firstLogin) {
+        $('txt-pass-hint').textContent = 'Por seguridad, cambiá la contraseña predeterminada antes de continuar.';
+        openModal('modal-cambiar-pass');
+      } else {
+        showToast('Bienvenido, admin 👋');
+      }
+    } else {
+      $('err-login').classList.add('show');
+    }
+  } catch { showToast('⚠️ Error de conexión'); }
+  finally { $('btn-login').disabled=false; $('btn-login').textContent='Ingresar'; }
+});
+
+$('inp-pass').addEventListener('keydown', e => { if(e.key==='Enter') $('btn-login').click(); });
+
+// ──────────────────────────────────────
+// CAMBIAR CONTRASEÑA
+// ──────────────────────────────────────
+// Botón en header para admin ya logueado
+document.addEventListener('click', e => {
+  if(e.target.id==='btn-cambiar-pass-header') {
+    $('txt-pass-hint').textContent = 'Ingresá la nueva contraseña.';
+    $('inp-new-pass').value=''; $('inp-confirm-pass').value='';
+    openModal('modal-cambiar-pass');
+  }
+});
+
+$('btn-cambiar-pass').addEventListener('click', async () => {
+  const np = $('inp-new-pass').value.trim();
+  const cp = $('inp-confirm-pass').value.trim();
+  if(np.length < 4 || np !== cp) { $('err-pass').classList.add('show'); return; }
+  $('err-pass').classList.remove('show');
+  $('btn-cambiar-pass').disabled=true; $('btn-cambiar-pass').textContent='Guardando...';
+  try {
+    await apiPost({ action:'changePassword', newPassword: np });
+    closeModal('modal-cambiar-pass');
+    showToast('Contraseña actualizada ✅');
+  } catch { showToast('⚠️ Error al guardar'); }
+  finally { $('btn-cambiar-pass').disabled=false; $('btn-cambiar-pass').textContent='Guardar contraseña'; }
+});
+
+// ──────────────────────────────────────
+// FAB — NUEVO MOVIMIENTO
+// ──────────────────────────────────────
+$('fab').addEventListener('click', () => {
+  $('modal-mov-title').textContent = 'Nuevo movimiento';
+  $('mov-edit-id').value = '';
+  $('mov-fecha').value  = todayISO();
+  $('mov-monto').value  = '';
+  $('mov-motivo').value = '';
+  $('err-mov').classList.remove('show');
+  setTipo('Ingreso');
+  openModal('modal-mov');
+});
+
+// ── Tipo toggle
+['ingreso','egreso'].forEach(t => {
+  $(`tipo-${t}`).addEventListener('click', () => setTipo(t.charAt(0).toUpperCase()+t.slice(1)));
+});
+function setTipo(t) {
+  tipoActivo = t;
+  $('tipo-ingreso').classList.toggle('active', t==='Ingreso');
+  $('tipo-egreso' ).classList.toggle('active', t==='Egreso');
+}
+
+// ── Guardar movimiento
+$('btn-guardar-mov').addEventListener('click', async () => {
+  const fecha  = $('mov-fecha').value;
+  const monto  = parseFloat($('mov-monto').value);
+  const motivo = $('mov-motivo').value.trim();
+  const editId = $('mov-edit-id').value;
+
+  if(!fecha || !monto || monto<=0 || !motivo) {
+    $('err-mov').classList.add('show'); return;
+  }
+  $('err-mov').classList.remove('show');
+  $('btn-guardar-mov').disabled=true; $('btn-guardar-mov').textContent='Guardando...';
+
+  try {
+    const payload = { action: editId ? 'editMovimiento' : 'addMovimiento',
+                      id: editId, fecha, tipo: tipoActivo, monto, motivo };
+    const r = await apiPost(payload);
+    if(r.ok) {
+      closeModal('modal-mov');
+      showToast(editId ? 'Movimiento actualizado ✅' : 'Movimiento guardado ✅');
+      await cargarMovimientos();
+    } else { showToast('⚠️ Error al guardar'); }
+  } catch { showToast('⚠️ Error de conexión'); }
+  finally { $('btn-guardar-mov').disabled=false; $('btn-guardar-mov').textContent='Guardar'; }
+});
+
+// ──────────────────────────────────────
+// EDITAR
+// ──────────────────────────────────────
+function editarMov(id) {
+  const m = movimientos.find(x => x.id===id); if(!m) return;
+  $('modal-mov-title').textContent = 'Editar movimiento';
+  $('mov-edit-id').value = id;
+  $('mov-fecha').value   = m.fecha;
+  $('mov-monto').value   = m.monto;
+  $('mov-motivo').value  = m.motivo;
+  setTipo(m.tipo);
+  $('err-mov').classList.remove('show');
+  openModal('modal-mov');
+}
+
+// ──────────────────────────────────────
+// ELIMINAR
+// ──────────────────────────────────────
+async function eliminarMov(id) {
+  if(!confirm('¿Eliminar este movimiento?')) return;
+  try {
+    const r = await apiPost({ action:'deleteMovimiento', id });
+    if(r.ok) { showToast('Eliminado 🗑️'); await cargarMovimientos(); }
+    else showToast('⚠️ No se pudo eliminar');
+  } catch { showToast('⚠️ Error de conexión'); }
+}
+
+// ──────────────────────────────────────
+// INIT
+// ──────────────────────────────────────
+(function init() {
+  // Restaurar sesión admin
+  if(localStorage.getItem('admin_session')) setAdminSession(true);
+  // Mes actual por defecto
+  mesFiltro = todayISO().substring(0,7);
+  $('sel-mes').innerHTML = '';
+  cargarMovimientos();
+})();
+</script>
+</body>
+</html>
+ + Number(n).toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:0});
 const fmtFecha = d => { const [y,m,dia] = d.split('-'); return `${dia}/${m}/${y}`; };
 
 function showToast(msg, ms=2500) {
