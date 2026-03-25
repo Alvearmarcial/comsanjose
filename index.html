@@ -154,18 +154,17 @@
 
     /* SPLASH */
     #splash { position: fixed; inset: 0; z-index: 999;
-              background: #ffffff;
+              background: linear-gradient(160deg, var(--blue) 0%, var(--blue-deeper) 100%);
               display: flex; flex-direction: column; align-items: center; justify-content: center;
               transition: opacity .5s ease; }
     #splash.hide { opacity: 0; pointer-events: none; }
-    .splash-inner { background: linear-gradient(160deg, var(--blue) 0%, var(--blue-deeper) 100%);
-                    border-radius: 24px; padding: 48px 56px;
-                    display: flex; flex-direction: column; align-items: center;
-                    box-shadow: 0 8px 32px rgba(26,86,219,.25); }
     .splash-line1 { font-size: clamp(1.6rem, 8vw, 2.4rem); font-weight: 300;
                     color: rgba(255,255,255,.85); letter-spacing: 3px; text-transform: uppercase; }
     .splash-line2 { font-size: clamp(2rem, 10vw, 3rem); font-weight: 800;
                     color: var(--gold); letter-spacing: 2px; margin-top: 4px; }
+    .splash-line3 { font-size: clamp(.9rem, 3.5vw, 1.1rem); font-weight: 400;
+                    color: rgba(255,255,255,.6); letter-spacing: 4px;
+                    text-transform: uppercase; margin-top: 12px; }
     .splash-bar { width: 48px; height: 3px; background: var(--gold);
                   border-radius: 2px; margin-top: 28px;
                   animation: grow 1.8s ease-in-out infinite; }
@@ -187,11 +186,10 @@
 
 <!-- SPLASH -->
 <div id="splash">
-  <div class="splash-inner">
-    <div class="splash-line1">Comunidad</div>
-    <div class="splash-line2">San José</div>
-    <div class="splash-bar"></div>
-  </div>
+  <div class="splash-line1">Comunidad</div>
+  <div class="splash-line2">San José</div>
+  <div class="splash-line3">General Alvear</div>
+  <div class="splash-bar"></div>
 </div>
 
 <header>
