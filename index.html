@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="ComunidadApp" />
   <link rel="manifest" href="manifest.json" />
-  <title>ComunidadApp</title>
+  <title>Comunidad San José</title>
   <style>
     :root {
       --blue:        #1a56db;
@@ -43,12 +43,12 @@
 
     /* CARDS */
     .cards { display: flex; flex-direction: column; gap: 10px; padding: 16px 16px 8px; }
-    .card-saldo-wrap { background: var(--gold); border-radius: var(--radius);
-                       padding: 18px 20px; text-align: center;
-                       box-shadow: 0 4px 20px rgba(245,197,24,.35); }
-    .card-saldo-wrap .card-label { color: rgba(0,0,0,.55); font-size: .72rem;
+    .card-saldo-wrap { background: var(--gold-light); border: 1px solid var(--gold);
+                       border-radius: var(--radius); padding: 18px 20px; text-align: center;
+                       backdrop-filter: blur(6px); }
+    .card-saldo-wrap .card-label { color: var(--muted); font-size: .72rem;
                                    text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
-    .card-saldo-wrap .card-value { color: #1a1a1a; font-size: clamp(1.4rem,6vw,2rem); font-weight: 800; }
+    .card-saldo-wrap .card-value { color: var(--gold); font-size: clamp(1.4rem,6vw,2rem); font-weight: 800; }
     .cards-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .card { background: var(--card-bg); border: 1px solid var(--card-border);
             border-radius: var(--radius); padding: 14px 10px; text-align: center;
@@ -166,8 +166,11 @@
 
 <header>
   <div class="header-row">
-    <h1>💰 ComunidadApp</h1>
-    <button id="btn-admin-toggle">🔐 Admin</button>
+    <h1>💰 Comunidad San José</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="btn-install" title="Instalar app" style="display:none;background:var(--gold-light);border:1px solid var(--gold);color:var(--gold);border-radius:20px;padding:6px 10px;font-size:1rem;cursor:pointer;">📲</button>
+      <button id="btn-admin-toggle" title="Administrador">🔐</button>
+    </div>
   </div>
 </header>
 
@@ -362,7 +365,7 @@ function renderList(lista) {
     <div class="mov-item ${m.tipo.toLowerCase()}">
       <div class="mov-info">
         <div class="mov-motivo">${escHtml(m.motivo)}</div>
-        <div class="mov-meta">${fmtFecha(m.fecha)} · ${m.tipo}</div>
+        <div class="mov-meta">${fmtFecha(m.fecha)}</div>
         ${isAdmin ? `<div class="mov-actions">
           <button class="btn-icon" onclick="editarMov('${m.id}')">✏️ Editar</button>
           <button class="btn-icon del" onclick="eliminarMov('${m.id}')">🗑️ Eliminar</button>
@@ -476,6 +479,31 @@ async function eliminarMov(id) {
     if (r.ok) { showToast('Eliminado 🗑️'); await cargarMovimientos(); }
     else showToast('⚠️ No se pudo eliminar');
   } catch { showToast('⚠️ Error de conexión'); }
+}
+
+// ── PWA INSTALL ──
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  $('btn-install').style.display = 'block';
+});
+$('btn-install').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') showToast('App instalada ✅');
+  deferredPrompt = null;
+  $('btn-install').style.display = 'none';
+});
+window.addEventListener('appinstalled', () => {
+  $('btn-install').style.display = 'none';
+  deferredPrompt = null;
+});
+
+// ── SERVICE WORKER ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
 (function init() {
