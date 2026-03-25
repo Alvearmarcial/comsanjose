@@ -183,7 +183,6 @@
 
 <!-- SPLASH -->
 <div id="splash">
-  <div class="splash-icon">💰</div>
   <div class="splash-line1">Comunidad</div>
   <div class="splash-line2">San José</div>
   <div class="splash-bar"></div>
@@ -538,7 +537,7 @@ if ('serviceWorker' in navigator) {
       const s = $('splash');
       s.classList.add('hide');
       setTimeout(() => s.remove(), 500);
-    }, 1800);
+    }, 2500);
   });
   if (localStorage.getItem('admin_session')) setAdminSession(true);
   mesFiltro = todayISO().substring(0,7);
