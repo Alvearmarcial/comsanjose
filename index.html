@@ -7,7 +7,7 @@
   <meta name="description" content="Gestión económica comunitaria" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="ComunidadApp" />
+  <meta name="apple-mobile-web-app-title" content="Comunidad San José" />
   <link rel="manifest" href="manifest.json" />
   <title>Comunidad San José</title>
   <style>
@@ -36,10 +36,10 @@
              background: rgba(19,71,184,.6); backdrop-filter: blur(8px); }
     .header-row { display: flex; justify-content: space-between; align-items: center; }
     header h1 { font-size: 1.1rem; font-weight: 700; }
-    #btn-admin-toggle { background: var(--gold-light); border: 1px solid var(--gold);
-      color: var(--gold); border-radius: 20px; padding: 6px 14px;
-      font-size: .85rem; cursor: pointer; font-weight: 600; }
-    #btn-admin-toggle:hover { background: rgba(245,197,24,.28); }
+    .header-btn { background: var(--gold-light); border: 1px solid var(--gold);
+      color: var(--gold); border-radius: 20px; padding: 6px 10px;
+      font-size: 1rem; cursor: pointer; font-weight: 600; line-height: 1; }
+    .header-btn:hover { background: rgba(245,197,24,.28); }
 
     /* CARDS */
     .cards { display: flex; flex-direction: column; gap: 10px; padding: 16px 16px 8px; }
@@ -101,7 +101,6 @@
            box-shadow: 0 4px 18px rgba(245,197,24,.5);
            display: none; align-items: center; justify-content: center; z-index: 20; }
     #fab:hover { background: var(--gold-dark); }
-    #fab.visible { display: flex; }
 
     /* MODAL */
     .modal-backdrop { display: none; position: fixed; inset: 0;
@@ -152,6 +151,16 @@
              box-shadow: 0 4px 14px rgba(245,197,24,.4); }
     #toast.show { opacity: 1; }
 
+    /* BANNER ACTUALIZACIÓN */
+    #update-banner { display: none; position: fixed; bottom: 0; left: 0; right: 0;
+                     background: var(--gold); color: #1a1a1a; padding: 12px 16px;
+                     z-index: 300; align-items: center; justify-content: space-between;
+                     font-size: .88rem; font-weight: 600; gap: 10px; }
+    #update-banner.show { display: flex; }
+    #update-banner button { background: #1a1a1a; color: var(--gold); border: none;
+                            border-radius: 8px; padding: 6px 14px; font-weight: 700;
+                            cursor: pointer; white-space: nowrap; }
+
     /* SPLASH */
     #splash { position: fixed; inset: 0; z-index: 999;
               background: linear-gradient(160deg, var(--blue) 0%, var(--blue-deeper) 100%);
@@ -165,12 +174,10 @@
     .splash-line3 { font-size: clamp(.9rem, 3.5vw, 1.1rem); font-weight: 400;
                     color: rgba(255,255,255,.6); letter-spacing: 4px;
                     text-transform: uppercase; margin-top: 12px; }
-    .splash-bar { width: 48px; height: 3px; background: var(--gold);
-                  border-radius: 2px; margin-top: 28px;
-                  animation: grow 1.8s ease-in-out infinite; }
-    @keyframes grow { 0%,100% { width: 32px; opacity: .5; } 50% { width: 64px; opacity: 1; } }
-    @keyframes grow { 0%,100% { width: 32px; opacity: .5; } 50% { width: 64px; opacity: 1; } }
-    @keyframes grow { 0%,100% { width: 32px; opacity: .5; } 50% { width: 64px; opacity: 1; } }
+    .splash-bar { width: 48px; height: 3px; background: var(--gold); border-radius: 2px;
+                  margin-top: 28px; animation: grow 1.8s ease-in-out infinite; }
+    @keyframes grow   { 0%,100% { width: 32px; opacity: .5; } 50% { width: 64px; opacity: 1; } }
+    @keyframes bounce { to { transform: translateY(-10px); opacity: .4; } }
 
     /* SPINNER */
     .spinner { display: flex; justify-content: center; padding: 30px 0; }
@@ -179,7 +186,6 @@
                    animation: bounce .6s infinite alternate; }
     .spinner div:nth-child(2) { animation-delay: .2s; }
     .spinner div:nth-child(3) { animation-delay: .4s; }
-    @keyframes bounce { to { transform: translateY(-10px); opacity: .4; } }
   </style>
 </head>
 <body>
@@ -192,12 +198,19 @@
   <div class="splash-bar"></div>
 </div>
 
+<!-- BANNER ACTUALIZACIÓN -->
+<div id="update-banner">
+  <span>🔄 Nueva versión disponible</span>
+  <button id="btn-update">Actualizar</button>
+</div>
+
 <header>
   <div class="header-row">
     <h1>Comunidad San José</h1>
     <div style="display:flex;gap:8px;align-items:center">
-      <button id="btn-install" title="Instalar app" style="display:none;background:var(--gold-light);border:1px solid var(--gold);color:var(--gold);border-radius:20px;padding:6px 10px;font-size:1rem;cursor:pointer;">📲</button>
-      <button id="btn-admin-toggle" title="Administrador">🔐</button>
+      <button id="btn-install"     class="header-btn" title="Instalar app"        style="display:none">📲</button>
+      <button id="btn-change-pass" class="header-btn" title="Cambiar contraseña"  style="display:none">🔑</button>
+      <button id="btn-admin-toggle" class="header-btn" title="Administrador">🔐</button>
     </div>
   </div>
 </header>
@@ -220,9 +233,7 @@
 </div>
 
 <main>
-  <div class="mes-row">
-    <select id="sel-mes"></select>
-  </div>
+  <div class="mes-row"><select id="sel-mes"></select></div>
   <div class="section-title">Movimientos</div>
   <div id="list-container"><div class="spinner"><div></div><div></div><div></div></div></div>
 </main>
@@ -247,6 +258,7 @@
 <!-- MODAL CAMBIAR CONTRASEÑA -->
 <div class="modal-backdrop" id="modal-cambiar-pass">
   <div class="modal">
+    <button class="modal-close" data-close="modal-cambiar-pass">×</button>
     <h2>🔑 Cambiar contraseña</h2>
     <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px;" id="txt-pass-hint">
       Por seguridad, cambiá la contraseña antes de continuar.
@@ -297,13 +309,10 @@
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbx-tB0Iy-vuQIFxRvV2PzbCRD9LL3uWULKlyOwhpvV1qErwcqj9wZlMOBLSXnfILHQN/exec';
 
-let isAdmin     = false;
-let tipoActivo  = 'Ingreso';
-let movimientos = [];
-let mesFiltro   = '';
+let isAdmin = false, tipoActivo = 'Ingreso', movimientos = [], mesFiltro = '';
 
-const $   = id => document.getElementById(id);
-const fmt = n  => '$' + Number(n).toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:0});
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + Number(n).toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:0});
 const fmtFecha = d => { const [y,m,dia] = d.split('-'); return `${dia}/${m}/${y}`; };
 
 function showToast(msg, ms=2500) {
@@ -329,8 +338,9 @@ function setAdminSession(on) {
   isAdmin = on;
   if (on) localStorage.setItem('admin_session','1');
   else    localStorage.removeItem('admin_session');
-  $('btn-admin-toggle').textContent = on ? '🔓 Salir' : '🔐 Admin';
-  $('fab').style.display = on ? 'flex' : 'none';
+  $('btn-admin-toggle').textContent  = on ? '🔓' : '🔐';
+  $('btn-change-pass').style.display = on ? 'block' : 'none';
+  $('fab').style.display             = on ? 'flex'  : 'none';
   renderList();
 }
 
@@ -350,7 +360,7 @@ async function cargarMovimientos() {
     movimientos = data.movimientos || [];
     poblarMeses();
     calcularYRenderizar();
-  } catch(e) {
+  } catch {
     $('list-container').innerHTML = '<div class="empty-state">⚠️ No se pudo conectar con el servidor.</div>';
   }
 }
@@ -409,56 +419,53 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// LOGIN
 $('btn-admin-toggle').addEventListener('click', () => {
   if (isAdmin) { setAdminSession(false); showToast('Sesión cerrada'); return; }
   $('inp-pass').value = ''; $('err-login').classList.remove('show');
   openModal('modal-login');
 });
-
 $('btn-login').addEventListener('click', async () => {
-  const pass = $('inp-pass').value.trim();
-  if (!pass) return;
+  const pass = $('inp-pass').value.trim(); if (!pass) return;
   $('btn-login').disabled = true; $('btn-login').textContent = 'Verificando...';
   try {
     const r = await api({ action: 'login', password: pass });
     if (r.ok) {
-      closeModal('modal-login');
-      setAdminSession(true);
-      if (r.firstLogin) {
-        $('txt-pass-hint').textContent = 'Por seguridad, cambiá la contraseña predeterminada.';
-        openModal('modal-cambiar-pass');
-      } else { showToast('Bienvenido Tesorero 👋'); }
+      closeModal('modal-login'); setAdminSession(true);
+      if (r.firstLogin) { $('txt-pass-hint').textContent = 'Por seguridad, cambiá la contraseña predeterminada.'; openModal('modal-cambiar-pass'); }
+      else showToast('Bienvenido Tesorero 👋');
     } else { $('err-login').classList.add('show'); }
   } catch { showToast('⚠️ Error de conexión'); }
   finally { $('btn-login').disabled = false; $('btn-login').textContent = 'Ingresar'; }
 });
 $('inp-pass').addEventListener('keydown', e => { if (e.key==='Enter') $('btn-login').click(); });
 
+// CAMBIAR CONTRASEÑA
+$('btn-change-pass').addEventListener('click', () => {
+  $('txt-pass-hint').textContent = 'Ingresá la nueva contraseña.';
+  $('inp-new-pass').value = ''; $('inp-confirm-pass').value = '';
+  $('err-pass').classList.remove('show');
+  openModal('modal-cambiar-pass');
+});
 $('btn-cambiar-pass').addEventListener('click', async () => {
-  const np = $('inp-new-pass').value.trim();
-  const cp = $('inp-confirm-pass').value.trim();
+  const np = $('inp-new-pass').value.trim(), cp = $('inp-confirm-pass').value.trim();
   if (np.length < 4 || np !== cp) { $('err-pass').classList.add('show'); return; }
   $('err-pass').classList.remove('show');
   $('btn-cambiar-pass').disabled = true; $('btn-cambiar-pass').textContent = 'Guardando...';
   try {
     await apiPost({ action:'changePassword', newPassword: np });
-    closeModal('modal-cambiar-pass');
-    showToast('Contraseña actualizada ✅');
+    closeModal('modal-cambiar-pass'); showToast('Contraseña actualizada ✅');
   } catch { showToast('⚠️ Error al guardar'); }
   finally { $('btn-cambiar-pass').disabled = false; $('btn-cambiar-pass').textContent = 'Guardar contraseña'; }
 });
 
+// FAB / MOVIMIENTO
 $('fab').addEventListener('click', () => {
   $('modal-mov-title').textContent = 'Nuevo movimiento';
-  $('mov-edit-id').value = '';
-  $('mov-fecha').value   = todayISO();
-  $('mov-monto').value   = '';
-  $('mov-motivo').value  = '';
-  $('err-mov').classList.remove('show');
-  setTipo('Ingreso');
-  openModal('modal-mov');
+  $('mov-edit-id').value = ''; $('mov-fecha').value = todayISO();
+  $('mov-monto').value = ''; $('mov-motivo').value = '';
+  $('err-mov').classList.remove('show'); setTipo('Ingreso'); openModal('modal-mov');
 });
-
 ['ingreso','egreso'].forEach(t =>
   $(`tipo-${t}`).addEventListener('click', () => setTipo(t.charAt(0).toUpperCase()+t.slice(1)))
 );
@@ -467,39 +474,27 @@ function setTipo(t) {
   $('tipo-ingreso').classList.toggle('active', t==='Ingreso');
   $('tipo-egreso' ).classList.toggle('active', t==='Egreso');
 }
-
 $('btn-guardar-mov').addEventListener('click', async () => {
-  const fecha  = $('mov-fecha').value;
-  const monto  = parseFloat($('mov-monto').value);
-  const motivo = $('mov-motivo').value.trim();
-  const editId = $('mov-edit-id').value;
+  const fecha = $('mov-fecha').value, monto = parseFloat($('mov-monto').value),
+        motivo = $('mov-motivo').value.trim(), editId = $('mov-edit-id').value;
   if (!fecha || !monto || monto <= 0 || !motivo) { $('err-mov').classList.add('show'); return; }
   $('err-mov').classList.remove('show');
   $('btn-guardar-mov').disabled = true; $('btn-guardar-mov').textContent = 'Guardando...';
   try {
     const r = await apiPost({ action: editId ? 'editMovimiento' : 'addMovimiento',
                                id: editId, fecha, tipo: tipoActivo, monto, motivo });
-    if (r.ok) {
-      closeModal('modal-mov');
-      showToast(editId ? 'Movimiento actualizado ✅' : 'Movimiento guardado ✅');
-      await cargarMovimientos();
-    } else { showToast('⚠️ Error al guardar'); }
+    if (r.ok) { closeModal('modal-mov'); showToast(editId ? 'Movimiento actualizado ✅' : 'Movimiento guardado ✅'); await cargarMovimientos(); }
+    else showToast('⚠️ Error al guardar');
   } catch { showToast('⚠️ Error de conexión'); }
   finally { $('btn-guardar-mov').disabled = false; $('btn-guardar-mov').textContent = 'Guardar'; }
 });
-
 function editarMov(id) {
   const m = movimientos.find(x => x.id===id); if (!m) return;
   $('modal-mov-title').textContent = 'Editar movimiento';
-  $('mov-edit-id').value = id;
-  $('mov-fecha').value   = m.fecha;
-  $('mov-monto').value   = m.monto;
-  $('mov-motivo').value  = m.motivo;
-  setTipo(m.tipo);
-  $('err-mov').classList.remove('show');
-  openModal('modal-mov');
+  $('mov-edit-id').value = id; $('mov-fecha').value = m.fecha;
+  $('mov-monto').value = m.monto; $('mov-motivo').value = m.motivo;
+  setTipo(m.tipo); $('err-mov').classList.remove('show'); openModal('modal-mov');
 }
-
 async function eliminarMov(id) {
   if (!confirm('¿Eliminar este movimiento?')) return;
   try {
@@ -509,11 +504,10 @@ async function eliminarMov(id) {
   } catch { showToast('⚠️ Error de conexión'); }
 }
 
-// ── PWA INSTALL ──
+// PWA INSTALL
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
+  e.preventDefault(); deferredPrompt = e;
   $('btn-install').style.display = 'block';
 });
 $('btn-install').addEventListener('click', async () => {
@@ -521,27 +515,49 @@ $('btn-install').addEventListener('click', async () => {
   deferredPrompt.prompt();
   const { outcome } = await deferredPrompt.userChoice;
   if (outcome === 'accepted') showToast('App instalada ✅');
-  deferredPrompt = null;
-  $('btn-install').style.display = 'none';
+  deferredPrompt = null; $('btn-install').style.display = 'none';
 });
 window.addEventListener('appinstalled', () => {
-  $('btn-install').style.display = 'none';
-  deferredPrompt = null;
+  $('btn-install').style.display = 'none'; deferredPrompt = null;
 });
 
-// ── SERVICE WORKER ──
+// SERVICE WORKER + ACTUALIZACIONES AUTOMÁTICAS
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    // Detectar nueva versión disponible
+    reg.addEventListener('updatefound', () => {
+      const newSW = reg.installing;
+      newSW.addEventListener('statechange', () => {
+        if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+          // Hay una nueva versión lista → mostrar banner
+          $('update-banner').classList.add('show');
+        }
+      });
+    });
+    // Verificar actualizaciones cada vez que se abre la app
+    reg.update();
+  }).catch(() => {});
+
+  // Al hacer clic en Actualizar, activar el nuevo SW y recargar
+  $('btn-update').addEventListener('click', () => {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg && reg.waiting) {
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+    });
+  });
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
 }
 
+// INIT
 (function init() {
-  // Ocultar splash al terminar de cargar
   window.addEventListener('load', () => {
     setTimeout(() => {
-      const s = $('splash');
-      s.classList.add('hide');
+      const s = $('splash'); s.classList.add('hide');
       setTimeout(() => s.remove(), 500);
-    }, 2500);
+    }, 5000);
   });
   if (localStorage.getItem('admin_session')) setAdminSession(true);
   mesFiltro = todayISO().substring(0,7);
