@@ -358,7 +358,7 @@ function calcularYRenderizar() {
 
 function renderList(lista) {
   if (!lista) lista = movimientos.filter(m => m.fecha.substring(0,7) === mesFiltro);
-  const sorted = [...lista].sort((a,b) => b.fecha.localeCompare(a.fecha));
+  const sorted = [...lista].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
   const c = $('list-container');
   if (!sorted.length) { c.innerHTML = '<div class="empty-state">Sin movimientos este mes.</div>'; return; }
   c.innerHTML = sorted.map(m => `
