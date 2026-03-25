@@ -154,19 +154,18 @@
 
     /* SPLASH */
     #splash { position: fixed; inset: 0; z-index: 999;
-              background: linear-gradient(160deg, var(--blue) 0%, var(--blue-deeper) 100%);
+              background: #ffffff;
               display: flex; flex-direction: column; align-items: center; justify-content: center;
               transition: opacity .5s ease; }
     #splash.hide { opacity: 0; pointer-events: none; }
-    .splash-icon { font-size: 3rem; margin-bottom: 24px; animation: pulse 1.8s infinite; }
-    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
     .splash-line1 { font-size: clamp(1.6rem, 8vw, 2.4rem); font-weight: 300;
-                    color: rgba(255,255,255,.85); letter-spacing: 3px; text-transform: uppercase; }
+                    color: var(--blue); letter-spacing: 3px; text-transform: uppercase; }
     .splash-line2 { font-size: clamp(2rem, 10vw, 3rem); font-weight: 800;
-                    color: var(--gold); letter-spacing: 2px; margin-top: 4px; }
-    .splash-bar { width: 48px; height: 3px; background: var(--gold);
+                    color: var(--gold-dark); letter-spacing: 2px; margin-top: 4px; }
+    .splash-bar { width: 48px; height: 3px; background: var(--blue);
                   border-radius: 2px; margin-top: 28px;
                   animation: grow 1.8s ease-in-out infinite; }
+    @keyframes grow { 0%,100% { width: 32px; opacity: .5; } 50% { width: 64px; opacity: 1; } }
     @keyframes grow { 0%,100% { width: 32px; opacity: .5; } 50% { width: 64px; opacity: 1; } }
 
     /* SPINNER */
