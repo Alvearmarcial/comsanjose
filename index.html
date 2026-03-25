@@ -194,7 +194,7 @@
 
 <header>
   <div class="header-row">
-    <h1>💰 Comunidad San José</h1>
+    <h1>Comunidad San José</h1>
     <div style="display:flex;gap:8px;align-items:center">
       <button id="btn-install" title="Instalar app" style="display:none;background:var(--gold-light);border:1px solid var(--gold);color:var(--gold);border-radius:20px;padding:6px 10px;font-size:1rem;cursor:pointer;">📲</button>
       <button id="btn-admin-toggle" title="Administrador">🔐</button>
@@ -427,7 +427,7 @@ $('btn-login').addEventListener('click', async () => {
       if (r.firstLogin) {
         $('txt-pass-hint').textContent = 'Por seguridad, cambiá la contraseña predeterminada.';
         openModal('modal-cambiar-pass');
-      } else { showToast('Bienvenido, admin 👋'); }
+      } else { showToast('Bienvenido Tesorero 👋'); }
     } else { $('err-login').classList.add('show'); }
   } catch { showToast('⚠️ Error de conexión'); }
   finally { $('btn-login').disabled = false; $('btn-login').textContent = 'Ingresar'; }
