@@ -208,8 +208,8 @@
   <div class="header-row">
     <h1>Comunidad San José</h1>
     <div style="display:flex;gap:8px;align-items:center">
-      <button id="btn-install"     class="header-btn" title="Instalar app"        style="display:none">📲</button>
-      <button id="btn-change-pass" class="header-btn" title="Cambiar contraseña"  style="display:none">🔑</button>
+      <button id="btn-install"     class="header-btn" title="Instalar app"       style="display:none">📲</button>
+      <button id="btn-change-pass" class="header-btn" title="Cambiar contraseña" style="display:none">🔑</button>
       <button id="btn-admin-toggle" class="header-btn" title="Administrador">🔐</button>
     </div>
   </div>
@@ -339,8 +339,9 @@ function setAdminSession(on) {
   if (on) localStorage.setItem('admin_session','1');
   else    localStorage.removeItem('admin_session');
   $('btn-admin-toggle').textContent  = on ? '🔓' : '🔐';
-  $('btn-change-pass').style.display = on ? 'block' : 'none';
-  $('fab').style.display             = on ? 'flex'  : 'none';
+  const btnPass = $('btn-change-pass');
+  if (btnPass) btnPass.style.display = on ? 'inline-block' : 'none';
+  $('fab').style.display = on ? 'flex' : 'none';
   renderList();
 }
 
@@ -559,6 +560,7 @@ if ('serviceWorker' in navigator) {
       setTimeout(() => s.remove(), 500);
     }, 5000);
   });
+  // Restaurar sesión después de que el DOM está listo
   if (localStorage.getItem('admin_session')) setAdminSession(true);
   mesFiltro = todayISO().substring(0,7);
   cargarMovimientos();
