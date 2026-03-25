@@ -1,6 +1,6 @@
 {
-  "name": "ComunidadApp",
-  "short_name": "ComunidadApp",
+  "name": "Comunidad San José",
+  "short_name": "C. San José",
   "description": "Gestión económica comunitaria",
   "start_url": "./index.html",
   "display": "standalone",
