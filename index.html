@@ -404,13 +404,17 @@ function calcularYRenderizar() {
 }
 
 function renderList(lista) {
-  if (!lista) lista = movimientos.filter(m => m.fecha.substring(0,7) === mesFiltro);
   const q = ($('inp-buscar').value || '').trim().toLowerCase();
-  if (q) lista = lista.filter(m =>
-    m.motivo.toLowerCase().includes(q) ||
-    m.fecha.includes(q) ||
-    String(m.monto).includes(q)
-  );
+  // Si hay búsqueda activa, ignorar el filtro de mes y buscar en todo
+  if (q) {
+    lista = movimientos.filter(m =>
+      m.motivo.toLowerCase().includes(q) ||
+      fmtFecha(m.fecha).includes(q) ||
+      String(m.monto).includes(q)
+    );
+  } else {
+    if (!lista) lista = movimientos.filter(m => m.fecha.substring(0,7) === mesFiltro);
+  }
   const sorted = [...lista].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
   const c = $('list-container');
   if (!sorted.length) { c.innerHTML = '<div class="empty-state">Sin resultados.</div>'; return; }
