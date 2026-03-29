@@ -385,7 +385,11 @@ function poblarMeses() {
 }
 
 $('sel-mes').addEventListener('change', e => { mesFiltro = e.target.value; calcularYRenderizar(); });
-$('inp-buscar').addEventListener('input', () => renderList());
+$('inp-buscar').addEventListener('input', () => {
+  const q = $('inp-buscar').value.trim();
+  if (q) renderList(movimientos); // busca en todos los registros
+  else   calcularYRenderizar();   // vuelve al mes seleccionado
+});
 
 function calcularYRenderizar() {
   const anterior      = movimientos.filter(m => m.fecha.substring(0,7) < mesFiltro);
@@ -409,7 +413,7 @@ function renderList(lista) {
   );
   const sorted = [...lista].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
   const c = $('list-container');
-  if (!sorted.length) { c.innerHTML = '<div class="empty-state">Sin movimientos este mes.</div>'; return; }
+  if (!sorted.length) { c.innerHTML = '<div class="empty-state">Sin resultados.</div>'; return; }
   c.innerHTML = sorted.map(m => `
     <div class="mov-item ${m.tipo.toLowerCase()}">
       <div class="mov-info">
